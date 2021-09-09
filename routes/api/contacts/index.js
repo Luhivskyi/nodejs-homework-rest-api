@@ -1,13 +1,18 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable semi */
 const express = require('express');
 const router = express.Router();
-const validate = require('./validation');
 const contactsController = require('../../../controllers/contacts');
+const {
+  validateContact,
+  updateValidateContact,
+  validateUpdateStatus,
+} = require('../../../helpers/validation');
 const guard = require('../../../helpers/guard');
 
 router
   .get('/', guard, contactsController.listContacts)
-  .post('/', guard, validate.createContact, contactsController.addContact);
+  .post('/', guard, validateContact, contactsController.addContact);
 
 router
   .get('/:contactId', guard, contactsController.getContactById)
@@ -15,8 +20,14 @@ router
   .patch(
     '/:contactId',
     guard,
-    validate.updateContact,
+    updateValidateContact,
     contactsController.updateContact,
-  );
+  )
 
+  .patch(
+    '/:contactId/favorite',
+    guard,
+    validateUpdateStatus,
+    contactsController.updateContactStatus,
+  );
 module.exports = router;

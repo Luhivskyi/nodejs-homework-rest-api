@@ -1,9 +1,12 @@
 /* eslint-disable semi */
 const jwt = require('jsonwebtoken');
 const Users = require('../model/users');
+const fs = require('fs/promises');
+const path = require('path');
 const { HttpCode } = require('../helpers/constants');
 require('dotenv').config();
 const SECRET_KEY = process.env.JWT_SECRET;
+const UploadAvatarService = require('../helpers/local-upload');
 
 const reg = async (req, res, next) => {
   try {
@@ -85,5 +88,59 @@ const currentUser = async (req, res, next) => {
     next(e);
   }
 };
+const updateSub = async (req, res, next) => {
+  const { id } = req.user;
+  const { subscription } = req.body;
+  try {
+    await Users.updateSubUser(id, subscription);
+    const user = await Users.findById(id);
+    return res.json({
+      status: 'success',
+      code: HttpCode.OK,
+      data: {
+        user: {
+          email: user.email,
+          subscription: user.subscription,
+        },
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+};
 
-module.exports = { reg, login, logout, currentUser };
+const updateAvatar = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const uploads = new UploadAvatarService('avatars');
+    const avatarUrl = await uploads.saveAvatar({ idUser: id, file: req.file });
+    console.log(
+      '🚀 ~ file: users.js ~ line 121 ~ updateAvatar ~ avatarUrl',
+      req.user.avatarURL,
+    );
+
+    try {
+      await fs.unlink(path.join('public', req.user.avatarURL));
+      console.log(
+        "🚀 ~ file: users.js ~ line 125 ~ updateAvatar ~ 'public', req.user.avatarURL",
+        'public',
+        req.user.avatarURL,
+      );
+    } catch (e) {
+      console.log(
+        '🚀 ~ file: users.js ~ line 127 ~ updateAvatar ~ error',
+        e.message,
+      );
+    }
+
+    await Users.updateAvatar(id, avatarUrl);
+    return res.json({
+      status: 'success',
+      code: HttpCode.OK,
+      data: { avatarUrl },
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+module.exports = { reg, login, logout, currentUser, updateSub, updateAvatar };

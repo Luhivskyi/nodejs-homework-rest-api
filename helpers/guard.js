@@ -1,8 +1,8 @@
 /* eslint-disable semi */
 const passport = require('passport');
-require('../config/passport');
-const { HttpCode } = require('./constants');
 
+const { HttpCode } = require('./constants');
+require('../config/passport');
 const quard = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user) => {
     const [, token] = req.get('Authorization').split(' ');

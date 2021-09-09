@@ -116,10 +116,39 @@ const updateContact = async (req, res, next) => {
   }
 };
 
+const updateContactStatus = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    const contact = await Contacts.updateContactStatus(
+      userId,
+      req.params.contactId,
+      req.body,
+    );
+    if (contact) {
+      res.json({
+        status: 'success',
+        code: HttpCode.OK,
+        data: {
+          contact,
+        },
+      });
+    } else {
+      res.status(HttpCode.NOT_FOUND).json({
+        status: 'error',
+        code: HttpCode.NOT_FOUND,
+        message: 'Not found',
+      });
+    }
+  } catch (e) {
+    next(e);
+  }
+};
+
 module.exports = {
   listContacts,
   getContactById,
   addContact,
-  removeContact,
   updateContact,
+  updateContactStatus,
+  removeContact,
 };
